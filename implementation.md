@@ -1,21 +1,24 @@
 # Implementation Prompt
 
-> **Instructions**: Fill in the placeholders below (marked with `{{...}}`), then feed this file to Claude Code. Delete any optional sections that don't apply.
+> Fill in the **Client Brief** section for each new project. The **Technical Rules** section is constant — don't modify it unless the boilerplate or CMS requirements change.
 
 ---
 
-## Task
+## Client Brief
 
-You are generating a production-ready single-page landing page using the SvelteKit boilerplate in this repository. Generate exactly **4 files**, overwriting the existing stubs:
+### Objective
 
-1. **`src/lib/components/Navbar.svelte`** — Site navigation bar
-2. **`src/lib/components/Footer.svelte`** — Site footer
-3. **`src/routes/+layout.svelte`** — App shell that imports shared components
-4. **`src/routes/+page.svelte`** — Homepage with all page sections
+<!-- What is this project? Who is the client? What do they do, who do they serve, and what is the goal of this website? Write this as a narrative — the more context you provide, the better the design and copy will be. -->
 
----
+{{OBJECTIVE — e.g. "I am building a website for my new client, Waterproof Charts. Waterproof Charts provides durable, weather-resistant nautical charts and marine reference materials designed specifically for use in harsh maritime environments..."}}
 
-## Business Information
+### Existing Website *(optional)*
+
+<!-- If the client has a current site, link it here. Useful for matching color schemes and understanding their current brand. -->
+
+{{EXISTING_SITE_URL — e.g. "https://waterproofcharts.com/"}}
+
+### Business Details
 
 - **Company Name**: {{COMPANY_NAME}}
 - **Industry**: {{INDUSTRY}}
@@ -24,33 +27,91 @@ You are generating a production-ready single-page landing page using the SvelteK
 - **Address**: {{ADDRESS}}
 - **Phone**: {{PHONE}}
 - **Email**: {{EMAIL}}
-- **Call-to-Actions**: {{CTAS — e.g. "Get a Free Quote", "Schedule a Consultation"}}
 
-## Brand Colors
+### Brand Colors
 
-Use these colors in the design: {{BRAND_COLORS — e.g. #7433ff, #334fff, #1a1a2e}}
+{{BRAND_COLORS — e.g. "Match the color scheme to the original website" or "Use these colors: #7433ff, #334fff, #1a1a2e"}}
 
-## Logo
+### Logo
 
-{{LOGO_INSTRUCTIONS — e.g. "The logo is at /logo.png in the static folder. Include it in the navbar." or "Use text-only branding with the company name."}}
+<!-- Place the logo file in the /static folder before generating. -->
 
-## Design Style *(optional)*
+{{LOGO_INSTRUCTIONS — e.g. "Logo is at /logo.png in the static folder. Set the logo size to 120px in the navbar (including when scrolling), 160px on the preloader, and 90px in the footer." or "Use text-only branding with the company name."}}
 
-Style preference: {{STYLE — e.g. "Modern and minimal", "Bold and colorful", "Corporate and clean"}}
+### Design Direction
 
-## Additional Design Instructions *(optional)*
+<!-- This is where you define the look and feel. Be as specific as you want — specific directives produce better results than generic ones. -->
 
-{{DESIGN_INSTRUCTIONS — e.g. "Use a dark theme with light accents", "Include a video hero section"}}
+Redesign this landing page to look like it was built by a top-tier modern design agency charging $60k+.
 
-## Reference Websites *(optional)*
+Focus on:
+
+{{DESIGN_DIRECTIVES — replace this block with your specific design instructions. Examples below:}}
+
+- Subtle, sophisticated animations (micro-interactions, smooth transitions)
+- A cohesive, premium color palette (avoid anything that feels "template-y")
+- Polished details: shadows, gradients, borders that feel intentional and high-end
+- Visual rhythm and alignment that feels considered
+- Use refined typography that aligns with the company's industry and brand identity
+- Include a modern preloader animation that displays the company logo while the page loads
+- Add a hero section background image that visually represents their core services or products, using an image sourced from Unsplash if none is provided
+- Animate every stat/number on the page from 0, counting up when it scrolls into view
+- Add a CTA section before the contact details suited for a modern layout
+- Add a combined contact details + message form section before the footer
+- Make sure the page scrolls to the top when clicking the company logo and when refreshing the page
+
+### Page Sections & CTAs
+
+<!-- Define the sections you want and the primary calls-to-action. Delete or add as needed. -->
+
+Include these sections in order:
+{{SECTIONS — e.g.}}
+1. Hero with background image and primary CTA
+2. Features / Services overview
+3. Stats / Numbers (with count-up animation on scroll)
+4. About / Why Choose Us
+5. Testimonials
+6. Pricing *(optional)*
+7. CTA banner
+8. Contact details + message form (combined section)
+9. FAQ *(optional)*
+
+Primary CTAs: {{CTAS — e.g. "Get a Free Quote", "Schedule a Consultation", "Shop Now"}}
+
+### Reference Websites *(optional)*
+
+<!-- Sites to draw design inspiration from. -->
 
 {{REFERENCE_SITES — e.g. "stripe.com, linear.app — clean layout with lots of whitespace"}}
 
+### Copywriting
+
+<!-- Provide raw source material for the copy. Paste the client's own words, their "About Us" page, service descriptions, anything. Claude will rewrite it into polished marketing copy for the website. -->
+
+Take full liberty with the copywriting for this website. In the client's own words, this is how they describe themselves and their services. This information needs to be conveyed in a way that is well-marketed and compelling to the end user.
+
+___
+
+{{CLIENT_COPY — paste the client's raw content here: about page text, service descriptions, unique selling points, anything relevant}}
+
+___
+
 ---
 
-## Architecture Rules
+## Technical Rules
 
-### File Structure
+> **Do not modify this section.** These rules ensure compatibility with the Core Labs CMS and the SvelteKit boilerplate in this repo.
+
+### Files to Generate
+
+Generate exactly **4 files**, overwriting the existing stubs:
+
+1. **`src/lib/components/Navbar.svelte`** — Site navigation bar
+2. **`src/lib/components/Footer.svelte`** — Site footer
+3. **`src/routes/+layout.svelte`** — App shell that imports shared components
+4. **`src/routes/+page.svelte`** — Homepage with all page sections
+
+### Component Architecture
 
 **Navbar.svelte:**
 - Self-contained component — no props, no external imports
@@ -83,7 +144,6 @@ Style preference: {{STYLE — e.g. "Modern and minimal", "Bold and colorful", "C
 
 **+page.svelte:**
 - Do NOT include Navbar or Footer — they come from the layout
-- Include 6–8 content sections: hero, features/services, stats, about/text, pricing, testimonials, CTA, contact, FAQ
 - All section data (services array, testimonials array, etc.) goes in the `<script>` block
 - Use `{#each}` loops to render repeatable content from data arrays
 - MUST include a `<svelte:head>` block with an SEO-optimized `<title>` and `<meta name="description">`
@@ -98,12 +158,12 @@ Style preference: {{STYLE — e.g. "Modern and minimal", "Bold and colorful", "C
 ### Styling Requirements
 
 - Use Tailwind CSS for ALL styling — NO inline styles, NO `<style>` blocks, NO custom CSS
-- The boilerplate already has Tailwind configured with the `@tailwindcss/typography` plugin and a custom `xs: 375px` breakpoint
+- The boilerplate has Tailwind configured with `@tailwindcss/typography` and a custom `xs: 375px` breakpoint
 
 ### Navigation & Links
 
 - All anchor links MUST use the `/#section` format (e.g. `href="/#services"`, `href="/#contact"`)
-- Add smooth scrolling: include `scroll-behavior: smooth` on the html element via Tailwind's `scroll-smooth` class on the outermost wrapper, OR add an `$effect` in the layout that sets `document.documentElement.style.scrollBehavior = 'smooth'`
+- Add smooth scrolling via Tailwind's `scroll-smooth` class on the outermost wrapper, OR add an `$effect` in the layout that sets `document.documentElement.style.scrollBehavior = 'smooth'`
 
 ### Scroll Animations
 
@@ -152,9 +212,7 @@ When generating a contact form, quote request form, newsletter signup, or any fo
 - Use semantic field names: `"name"`, `"email"`, `"phone"`, `"message"`, `"company"`, etc.
 - Do NOT hardcode any submission URL — use only `__FORM_ACTION__`.
 
----
-
-## Design Excellence
+### Design Excellence
 
 This is the most important part. Think **Stripe, Linear, Vercel, Apple** level design quality:
 
