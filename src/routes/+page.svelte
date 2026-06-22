@@ -37,7 +37,7 @@
 
 <main id="main-content">
   <!-- section:hero {"type":"hero","id":"hero-1"} -->
-  <section class="bg-white">
+  <section id="hero" class="bg-white">
     <div class="mx-auto max-w-6xl px-6 py-24 text-center">
       <h1 class="text-4xl font-bold tracking-tight text-gray-900 sm:text-5xl">Your headline here</h1>
       <p class="mx-auto mt-6 max-w-2xl text-lg text-gray-600">
