@@ -19,3 +19,13 @@ The complete, non-negotiable CMS conventions live in **`claude.md`** at the repo
 - Most edits are UI/content in `src/routes/**/+page.svelte` and `src/lib/components/`.
 - Match the existing structure, styling, and the conventions above. **Validate the build before declaring success.**
 - Make focused commits; the platform publishes your branch.
+
+## Lighthouse: performance, accessibility, SEO (non-negotiable)
+
+These sites are sold on being fast, accessible, and SEO-friendly — keep Lighthouse in the high 90s–100. Full rules are in `claude.md` ("Performance, Accessibility & SEO"). The essentials, on every edit:
+
+- **Prerender stays on** (`+layout.js`). If you add a server `load`/form `action` to a page, set `export const prerender = false` on that page only.
+- **Images**: every `<img>` has `width`, `height`, and a meaningful `alt`. Below the fold → `loading="lazy" decoding="async"`. Hero/LCP image → `fetchpriority="high"` and NOT lazy. Right-size files; prefer webp/avif.
+- **Accessibility**: keep `lang`, the skip link, and `<main id="main-content">`. One `<h1>`/page, ordered headings, WCAG-AA contrast, visible focus, real `<a>`/`<button>`, labels on inputs.
+- **SEO**: every page keeps a unique `<title>` + `<meta name="description">`, `<link rel="canonical">`, OG/Twitter tags, and JSON-LD. Keep `robots.txt` + the `sitemap.xml` route valid (add new routes to it). External links use `rel="noopener"`.
+- **Validate**: run `npm run build` (a prerender error → that page needs `prerender = false`). Never strip canonical/OG/JSON-LD, image dimensions, the skip link, `lang`, or landmarks.
