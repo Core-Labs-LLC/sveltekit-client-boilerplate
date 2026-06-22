@@ -88,7 +88,7 @@ All internal anchor links MUST use the `/#section` format:
 
 - The format is `/#sectionType` (hash prefixed with forward slash)
 - Do NOT use `#services` (without the leading slash) - smooth scrolling and the CMS link editor depend on the `/#` format
-- Ensure the target section exists with matching section markers
+- The target section element MUST carry a matching `id` (e.g. `<section id="services">`) so the anchor resolves. Prerendering validates these — a missing id only warns (it won't fail the build), but keep them in sync
 
 ## SEO Tags
 
