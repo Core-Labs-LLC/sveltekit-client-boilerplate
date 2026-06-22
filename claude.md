@@ -121,3 +121,33 @@ Every `+page.svelte` MUST include a `<svelte:head>` block:
 - Do NOT remove `<svelte:head>` SEO tags
 - Do NOT add TypeScript syntax
 - Do NOT remove the Core Labs branding from the footer
+## Performance, Accessibility & SEO (Lighthouse)
+
+Core Labs sites must score in the high 90s–100 on Google Lighthouse (Performance, Accessibility, Best Practices, SEO). Preserve and extend these on every edit:
+
+### Performance
+- **Prerendering**: pages are prerendered to static HTML via `+layout.js` (`export const prerender = true`). Keep it. A page that adds a server `load` or a form `action` must set `export const prerender = false` on THAT page only. Contact forms that POST via `fetch` to an external endpoint do NOT need this.
+- **Images** (biggest perf lever — LCP + CLS):
+  - ALWAYS set `width` and `height` (intrinsic pixels) on every `<img>` so the browser reserves space (no layout shift).
+  - Below-the-fold images: add `loading="lazy"` and `decoding="async"`.
+  - The hero / largest above-the-fold image: do NOT lazy-load it; add `fetchpriority="high"`.
+  - Prefer modern formats (`.webp`/`.avif`) and reasonably sized files; never ship a 4000px image into a 600px slot.
+- Tailwind utility classes only (CSS is purged + tiny). No large client-side JS libraries; Svelte ships almost none by default — keep it that way.
+- If the site loads images/fonts from another origin, add a `<link rel="preconnect" href="…">` for it in the page `<svelte:head>`.
+
+### Accessibility
+- Keep `<html lang="en">` (in `app.html`) and the **skip-to-content** link in `+layout.svelte`. Every page's top-level wrapper is `<main id="main-content">` so the skip link works.
+- Landmarks: Navbar uses `<header>`/`<nav>`, page content uses `<main>`, Footer uses `<footer>`. Don't duplicate `<main>`.
+- One `<h1>` per page; don't skip heading levels (h1 → h2 → h3).
+- Every `<img>` has a meaningful `alt` (empty `alt=""` only for purely decorative images).
+- Color contrast must meet WCAG AA (≥ 4.5:1 for normal text). Avoid light-gray text on white.
+- Interactive elements: real `<a>`/`<button>` (never clickable `<div>`), visible focus (kept by the base styles), and tap targets ≥ 44px.
+- Form inputs each have an associated `<label>`.
+
+### SEO
+- Every `+page.svelte` `<svelte:head>` has a **unique** `<title>` + `<meta name="description">`, a `<link rel="canonical">`, Open Graph (`og:*`) + Twitter tags, and JSON-LD structured data (`Organization`, or `LocalBusiness` with address/phone/hours for local clients).
+- Keep `static/robots.txt` and the `sitemap.xml` route valid; add new routes to the sitemap's `routes` list.
+- Descriptive link text (not "click here"); external links use `rel="noopener"` (add `noreferrer` for untrusted).
+
+### Validate
+- Run `npm run build` before declaring success (a prerender error means a page needs `export const prerender = false`). Keep these guarantees intact — do not strip canonical/OG/JSON-LD, image dimensions, the skip link, `lang`, or landmark elements for "cleanliness".
