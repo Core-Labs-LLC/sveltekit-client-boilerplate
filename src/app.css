@@ -1,3 +1,41 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Accessibility & performance base (keeps Lighthouse a11y/perf high). */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Always-visible keyboard focus indicator. */
+  :focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+
+  /* Responsive images that don't cause layout shift (paired with width/height attrs). */
+  img,
+  picture,
+  video,
+  canvas,
+  svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Respect users who prefer reduced motion. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
