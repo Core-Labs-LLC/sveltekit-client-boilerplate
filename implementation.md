@@ -200,7 +200,8 @@ When generating a contact form, quote request form, newsletter signup, or any fo
   ```
 - Include the hCaptcha widget inside the form before the submit button:
   - Add in `<svelte:head>`: `<script src="https://js.hcaptcha.com/1/api.js" async defer></script>`
-  - Add inside the form: `<div class="h-captcha" data-sitekey="{{HCAPTCHA_SITE_KEY}}"></div>`
+  - Add inside the form: `<div class="h-captcha" data-sitekey="9f64291e-4d3a-4ae8-b4ee-5692268481b2"></div>`
+  - This sitekey is Core Labs' shared public hCaptcha sitekey — it pairs with the platform's server-side verification. Use it verbatim; do NOT invent a placeholder or a per-site key.
 - Handle form submission with JavaScript using `$state` for status tracking. On submit:
   1. Prevent default form submission
   2. Collect form data with `FormData`, convert to object
