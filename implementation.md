@@ -190,28 +190,7 @@ Do NOT add section markers to Navbar.svelte or Footer.svelte. Every distinct sec
 
 ### Forms
 
-When generating a contact form, quote request form, newsletter signup, or any form that collects user input:
-
-- Set the form action to exactly: `action="__FORM_ACTION__"` — this placeholder will be replaced with the real submission endpoint after import.
-- Set `method="POST"` on the form element.
-- Include a hidden honeypot spam field inside the form:
-  ```html
-  <input type="text" name="website" style="position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden" tabindex="-1" autocomplete="off" />
-  ```
-- Include the hCaptcha widget inside the form before the submit button:
-  - Add in `<svelte:head>`: `<script src="https://js.hcaptcha.com/1/api.js" async defer></script>`
-  - Add inside the form: `<div class="h-captcha" data-sitekey="9f64291e-4d3a-4ae8-b4ee-5692268481b2"></div>`
-  - This sitekey is Core Labs' shared public hCaptcha sitekey — it pairs with the platform's server-side verification. Use it verbatim; do NOT invent a placeholder or a per-site key.
-- Handle form submission with JavaScript using `$state` for status tracking. On submit:
-  1. Prevent default form submission
-  2. Collect form data with `FormData`, convert to object
-  3. Read `h-captcha-response`: `document.querySelector('[name="h-captcha-response"]')?.value`
-  4. Include it in the POST body as `"h-captcha-response"`
-  5. POST as JSON to the form's action URL with `Content-Type: application/json`
-  6. Show success message on 200, error message otherwise
-  7. Reset the form and hCaptcha widget on success: `if (typeof hcaptcha !== 'undefined') hcaptcha.reset()`
-- Use semantic field names: `"name"`, `"email"`, `"phone"`, `"message"`, `"company"`, etc.
-- Do NOT hardcode any submission URL — use only `__FORM_ACTION__`.
+Do NOT hand-build a form backend, submission URL, or CAPTCHA sitekey during initial generation. Client forms are registered in the Core Labs CMS (which mints the real submission endpoint) and then wired into the site through the CMS "Connect form to site" action — that flow supplies Sven the exact endpoint and hCaptcha widget to render. The full, authoritative form convention lives in `claude.md` ("Forms"); follow it there. If a page needs a placeholder contact section before a form is connected, use plain semantic markup (heading + copy + a CTA) — no `<form>` posting to an invented or placeholder URL.
 
 ### Design Excellence
 
@@ -229,4 +208,4 @@ This is the most important part. Think **Stripe, Linear, Vercel, Apple** level d
 
 ## Generate Now
 
-Create the 4 files listed above in this repository. Write each file completely — no partial code or placeholders (except `__FORM_ACTION__` for forms). Every file should be production-ready.
+Create the 4 files listed above in this repository. Write each file completely — no partial code or placeholders. Every file should be production-ready. Do not add a posting `<form>`; forms are wired later through the CMS (see "Forms" above).

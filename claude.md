@@ -104,6 +104,19 @@ Every `+page.svelte` MUST include a `<svelte:head>` block:
 - Do NOT remove or omit these tags - the CMS has a dedicated SEO editor that reads and writes them
 - Keep the `<svelte:head>` block at the top of the template markup (after the script block)
 
+## Forms
+
+Client forms (contact, quote request, newsletter signup, etc.) are **registered in the Core Labs CMS** and wired into the site through the CMS "Connect form to site" action. That action gives you the exact submission endpoint and the fields to render — **use the values from the task instructions verbatim.**
+
+- **Never invent a form backend or submission URL.** The endpoint is always the CMS forms API: `https://api.corelabs.digital/api/forms/<form-slug>/submit`, where `<form-slug>` is supplied by the task. Never use a relative action, a placeholder like `__FORM_ACTION__`, or your own server route. If you are asked to add a form but no endpoint/slug was provided, do NOT guess one — render a plain contact section (heading + copy + CTA) and tell the user to create the form in CMS Forms, then use "Connect form to site."
+- **Submit via `fetch()`**, not a native navigation: `method="POST"`, prevent the default submit, show a sending → success/error state, and reset the form on success. Because the POST goes to an external endpoint via `fetch`, the page does **not** need `export const prerender = false`.
+- **hCaptcha** (when the task says the form requires it):
+  - Load the script once in `<svelte:head>`: `<script src="https://js.hcaptcha.com/1/api.js" async defer></script>`.
+  - Render the widget inside the form, before the submit button: `<div class="h-captcha" data-sitekey="9f64291e-4d3a-4ae8-b4ee-5692268481b2"></div>`. This is Core Labs' **shared public** hCaptcha sitekey — use it verbatim; never substitute a placeholder or a per-site key (a wrong key shows "The sitekey for this hCaptcha is incorrect").
+  - On submit, read the token from `[name="h-captcha-response"]` and include it in the POST body as `h-captcha-response`. If it's empty, block submission, ask the user to complete the CAPTCHA, and call `hcaptcha.reset()`.
+- **Honeypot**: include the hidden spam field named in the task (default `website`), hidden with Tailwind utilities (not inline styles) and left empty: `<input type="text" name="website" class="absolute left-[-10000px] top-auto h-px w-px overflow-hidden" tabindex="-1" autocomplete="off" />`.
+- **Field names**: use the exact posted keys from the task (typically semantic names like `name`, `email`, `phone`, `message`, `company`). Every input has an associated `<label>`.
+
 ## Svelte Conventions
 
 - Svelte 5 runes only: Use `$state`, `$derived`, `$effect`, `$props` - NOT the legacy Svelte 4 API (`export let`, reactive `$:` statements, stores)
