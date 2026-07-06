@@ -12,6 +12,7 @@ The complete, non-negotiable CMS conventions live in **`claude.md`** at the repo
 - **Tailwind only** — no inline `style=""`, no `<style>` blocks, no CSS variables/preprocessors. The CMS color editor reads Tailwind color classes (incl. `bg-[#7433ff]`).
 - **Anchor links** — use the `/#section` format (leading slash + hash).
 - **SEO** — every `+page.svelte` keeps a `<svelte:head>` with `<title>` + `<meta name="description">` (the CMS SEO editor reads/writes these).
+- **Forms** — never hand-build a form backend, submission URL, or CAPTCHA sitekey. Client forms are registered in the CMS and wired via its "Connect form to site" action, which gives you the exact endpoint (`https://api.corelabs.digital/api/forms/<slug>/submit`) and hCaptcha widget — use those verbatim; never a relative/placeholder `action` or a per-site key. No endpoint given → render a plain contact section (not a posting `<form>`). Full rules in `claude.md` ("Forms").
 - **Svelte 5 runes only** (`$state`, `$derived`, `$props`, `$effect`) — no Svelte 4 (`export let`, `$:`, stores). **Plain JavaScript, no TypeScript** — use JSDoc if you need types.
 
 ## Working in this repo
