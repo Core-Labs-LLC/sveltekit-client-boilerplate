@@ -36,7 +36,7 @@
 
 <!-- Place the logo file in the /static folder before generating. -->
 
-{{LOGO_INSTRUCTIONS — e.g. "Logo is at /logo.png in the static folder. Set the logo size to 120px in the navbar (including when scrolling), 160px on the preloader, and 90px in the footer." or "Use text-only branding with the company name."}}
+{{LOGO_INSTRUCTIONS — e.g. "Logo is at /logo.png in the static folder. Set the logo size to 120px in the navbar (including when scrolling) and 90px in the footer." or "Use text-only branding with the company name."}}
 
 ### Design Direction
 
@@ -52,10 +52,9 @@ Focus on:
 - A cohesive, premium color palette (avoid anything that feels "template-y")
 - Polished details: shadows, gradients, borders that feel intentional and high-end
 - Visual rhythm and alignment that feels considered
-- Use refined typography that aligns with the company's industry and brand identity
-- Include a modern preloader animation that displays the company logo while the page loads
-- Add a hero section background image that visually represents their core services or products, using an image sourced from Unsplash if none is provided
-- Animate every stat/number on the page from 0, counting up when it scrolls into view
+- Use refined typography that aligns with the company's industry and brand identity (self-hosted via `@fontsource-variable` — see Performance rules; never a Google Fonts `<link>`)
+- Add a hero section background image that visually represents their core services or products — sourced from Unsplash if none is provided, downloaded and optimized into `/static` per the Performance rules (never hotlinked at full resolution)
+- Animate every stat/number on the page from 0, counting up when it scrolls into view (use `tabular-nums` and reserve the final width so digits don't shift the layout)
 - Add a CTA section before the contact details suited for a modern layout
 - Add a combined contact details + message form section before the footer
 - Make sure the page scrolls to the top when clicking the company logo and when refreshing the page
@@ -127,6 +126,8 @@ Generate exactly **4 files**, overwriting the existing stubs:
 **+layout.svelte:**
 - MUST import `'../app.css'` for Tailwind CSS
 - MUST import and render Navbar and Footer from `'$lib/components/'`
+- MUST keep the skip-to-content link from the boilerplate (accessibility)
+- Do NOT wrap `{@render children()}` in `<main>` — each page provides its own `<main id="main-content">` (the skip link's target); a second `<main>` breaks landmarks
 - Use Svelte 5 children snippet pattern:
   ```svelte
   <script>
@@ -135,10 +136,9 @@ Generate exactly **4 files**, overwriting the existing stubs:
     import Footer from '$lib/components/Footer.svelte'
     let { children } = $props()
   </script>
+  <!-- keep the boilerplate's skip-to-content link here -->
   <Navbar />
-  <main>
-    {@render children()}
-  </main>
+  {@render children()}
   <Footer />
   ```
 
@@ -173,6 +173,20 @@ Generate exactly **4 files**, overwriting the existing stubs:
   2. Use Tailwind classes: `opacity-0 translate-y-8` → `opacity-100 translate-y-0` with `transition-all duration-700`
   3. Stagger child elements within sections for a cascading reveal effect
   4. Keep animations subtle and professional — no bouncing or spinning
+- **The hero section is exempt**: the hero headline and hero image must be visible in the initial HTML — never `opacity-0` waiting for JS. Hiding the LCP element behind an entrance animation destroys the Lighthouse performance score. Scroll reveals are for below-the-fold sections only.
+- No full-page preloaders or splash screens — the site is prerendered static HTML and must paint instantly.
+
+### Performance & Lighthouse (non-negotiable)
+
+These sites are sold on near-perfect Lighthouse scores. The boilerplate already prerenders every page (`+layout.js`), ships a skip link, focus styles, `robots.txt`, and a sitemap — keep all of it. On top of that:
+
+- Every `<img>` gets `width`, `height`, and meaningful `alt`; below-the-fold images get `loading="lazy" decoding="async"`; the hero image gets `fetchpriority="high"` and is never lazy-loaded
+- Stock imagery is downloaded and optimized into `/static` (webp, ≤ 1920px wide, ~≤ 250KB) — never hotlink full-resolution stock URLs
+- Hero backgrounds use an absolutely-positioned `<img>` with `object-cover`, not CSS `background-image`
+- Fonts: system stack, or self-hosted via `@fontsource-variable/<font>` imported in `src/app.css` and wired into `tailwind.config.js` — NEVER a `<link>` to fonts.googleapis.com or other third-party font CSS; max 2 families
+- No third-party scripts (analytics, chat widgets, pixels) unless explicitly requested
+- Every page keeps a unique `<title>`, `<meta name="description">`, `<link rel="canonical">`, OG/Twitter tags, and JSON-LD structured data (`LocalBusiness` for local clients) — see the boilerplate's `+page.svelte` for the pattern
+- Run `npm run build` before declaring success
 
 ### Section Markers (Required for CMS)
 
@@ -196,8 +210,8 @@ Do NOT hand-build a form backend, submission URL, or CAPTCHA sitekey during init
 
 This is the most important part. Think **Stripe, Linear, Vercel, Apple** level design quality:
 
-- **Typography**: Refined hierarchy — large bold headings, lighter subtext, consistent sizing
-- **Animations**: Smooth hover transitions, fade-ins, scroll-triggered reveals — subtle and sophisticated
+- **Typography**: Refined hierarchy — large bold headings, lighter subtext, consistent sizing (fonts self-hosted per the Performance rules)
+- **Animations**: Smooth hover transitions, fade-ins, scroll-triggered reveals — subtle and sophisticated (hero stays visible on first paint; below-the-fold only)
 - **Color palette**: Cohesive and premium, derived from the brand colors — never generic or template-y
 - **Polish**: Refined shadows, subtle gradients, intentional borders and spacing
 - **Rhythm**: Consistent padding, alignment, and whitespace that feels considered

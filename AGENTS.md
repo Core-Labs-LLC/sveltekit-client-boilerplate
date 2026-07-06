@@ -26,7 +26,10 @@ The complete, non-negotiable CMS conventions live in **`claude.md`** at the repo
 These sites are sold on being fast, accessible, and SEO-friendly — keep Lighthouse in the high 90s–100. Full rules are in `claude.md` ("Performance, Accessibility & SEO"). The essentials, on every edit:
 
 - **Prerender stays on** (`+layout.js`). If you add a server `load`/form `action` to a page, set `export const prerender = false` on that page only.
-- **Images**: every `<img>` has `width`, `height`, and a meaningful `alt`. Below the fold → `loading="lazy" decoding="async"`. Hero/LCP image → `fetchpriority="high"` and NOT lazy. Right-size files; prefer webp/avif.
+- **Images**: every `<img>` has `width`, `height`, and a meaningful `alt`. Below the fold → `loading="lazy" decoding="async"`. Hero/LCP image → `fetchpriority="high"` and NOT lazy. Right-size files; prefer webp/avif. Stock photos (Unsplash etc.): download an optimized rendition into `/static` — never hotlink full-res URLs. Hero backgrounds: absolutely-positioned `<img>` with `object-cover`, not CSS `background-image`.
+- **Fonts**: system font stack by default; custom type is **self-hosted** via `@fontsource-variable/<font>` imported in `src/app.css`. NEVER add a `<link>` to `fonts.googleapis.com` or any third-party font CSS. Max 2 families.
+- **No preloaders/splash screens** — prerendered pages paint instantly; an overlay only delays LCP. And never hide the hero headline/image behind an `opacity-0` entrance animation — scroll reveals are for below-the-fold sections only (via `IntersectionObserver`, animating `transform`/`opacity`).
+- **No third-party scripts** (analytics, chat, pixels) unless the task explicitly asks. Video embeds are lazy iframes in an `aspect-video` box.
 - **Accessibility**: keep `lang`, the skip link, and `<main id="main-content">`. One `<h1>`/page, ordered headings, WCAG-AA contrast, visible focus, real `<a>`/`<button>`, labels on inputs.
 - **SEO**: every page keeps a unique `<title>` + `<meta name="description">`, `<link rel="canonical">`, OG/Twitter tags, and JSON-LD. Keep `robots.txt` + the `sitemap.xml` route valid (add new routes to it). External links use `rel="noopener"`.
 - **Validate**: run `npm run build` (a prerender error → that page needs `prerender = false`). Never strip canonical/OG/JSON-LD, image dimensions, the skip link, `lang`, or landmarks.
