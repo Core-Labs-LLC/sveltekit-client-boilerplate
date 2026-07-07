@@ -117,6 +117,30 @@ Client forms (contact, quote request, newsletter signup, etc.) are **registered 
 - **Honeypot**: include the hidden spam field named in the task (default `website`), hidden with Tailwind utilities (not inline styles) and left empty: `<input type="text" name="website" class="absolute left-[-10000px] top-auto h-px w-px overflow-hidden" tabindex="-1" autocomplete="off" />`.
 - **Field names**: use the exact posted keys from the task (typically semantic names like `name`, `email`, `phone`, `message`, `company`). Every input has an associated `<label>`.
 
+## Mailing List Signup
+
+Newsletter / mailing-list signups POST to the Core Labs mailing API — **never build your own backend or store emails locally.**
+
+- **Endpoint**: `POST https://api.corelabs.digital/api/mailing-lists/<app-id>/submit`, where `<app-id>` is this site's Core Labs app id. The app id is supplied by the task instructions — **use it verbatim; never guess one or reuse an id from another site.** If asked to add a signup but no app id was provided, render the section without a posting form and say the signup must be connected via the CMS.
+- **Fields** (exact posted keys): `email` (required), `name` (optional), `phone_number` (optional). Send as JSON or `application/x-www-form-urlencoded`.
+- **Honeypot**: include a hidden input named `website` (hidden with Tailwind offscreen utilities, `tabindex="-1"`, `autocomplete="off"`) and leave it empty — the endpoint silently drops submissions where it is filled. Mailing-list signups do NOT use hCaptcha.
+- **Submit via `fetch()`** exactly like forms: prevent the default navigation, sending → success/error states, show the `message` the endpoint returns (200 → `{ message, subscriber_id }`), reset on success. Because the POST is a `fetch` to an external endpoint, the page does **not** need `export const prerender = false`.
+
+## Blog
+
+Blog posts are authored in the Core Labs CMS; the site only **renders** them. Never build a local content system (markdown files, hardcoded post arrays, a CMS of your own) and never invent API URLs.
+
+- **Endpoints** (public `GET`, CORS-enabled, return only published posts, newest first):
+  - List: `https://api.corelabs.digital/blog-posts/<app-id>` → `{ blogPosts: [...], pagination: { total, limit, offset, hasMore } }` (supports `?limit=&offset=`).
+  - Detail: `https://api.corelabs.digital/blog-posts/<app-id>/<post-slug>` → `{ blogPost }`.
+  - Post shape: `{ id, title, slug, content, content_type, published_date, meta_title, meta_description, featured_image, created_at, updated_at }`.
+- The `<app-id>` is supplied by the task instructions — **use it verbatim; never guess.** No app id → don't build blog pages; say the blog must be connected via the CMS.
+- **Pages**: listing at `/blog` and detail at `/blog/[slug]` unless the task names another path. Listing cards show `featured_image`, `title`, `published_date`, and an excerpt (`meta_description` or the first paragraph), linking to the detail page. Handle the empty state gracefully ("No posts yet" — never a broken page).
+- **Rendering `content`**: `content_type` is `"markdown"` or `"html"`. Markdown → convert to HTML (a small renderer like `marked` is fine, imported only on blog routes); html → inject with `{@html post.content}` (blog content is trusted CMS content).
+- **Prerendering**: posts are published in the CMS **without a site redeploy**, so blog routes must NOT be prerendered. Fetch in a universal load (`+page.js`) using the load `fetch`, and set `export const prerender = false` on BOTH blog routes (listing and detail).
+- **SEO**: the detail page sets `<title>` / `<meta name="description">` from `meta_title` / `meta_description` (falling back to `title` / excerpt), plus canonical + OG tags per the SEO rules. Add the listing path (e.g. `/blog`) to the sitemap `routes` list; dynamic post slugs need not be enumerated.
+- **Section markers**: markup rendered from the blog API is data-driven, not CMS-editable — do NOT wrap the fetched listing/detail content in section markers. Static sections on those pages (a hero above the list, a CTA below) keep their markers as usual.
+
 ## Svelte Conventions
 
 - Svelte 5 runes only: Use `$state`, `$derived`, `$effect`, `$props` - NOT the legacy Svelte 4 API (`export let`, reactive `$:` statements, stores)
@@ -134,6 +158,8 @@ Client forms (contact, quote request, newsletter signup, etc.) are **registered 
 - Do NOT remove `<svelte:head>` SEO tags
 - Do NOT add TypeScript syntax
 - Do NOT remove the Core Labs branding from the footer
+- Do NOT build local backends or storage for forms, mailing lists, or blog posts - those live in the Core Labs CMS and the site talks to its public API
+- Do NOT invent or reuse app ids / form slugs from other sites - identifiers always come verbatim from the task instructions
 ## Performance, Accessibility & SEO (Lighthouse)
 
 Core Labs sites must score in the high 90s–100 on Google Lighthouse (Performance, Accessibility, Best Practices, SEO). Preserve and extend these on every edit:

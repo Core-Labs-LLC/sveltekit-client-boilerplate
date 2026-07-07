@@ -13,6 +13,8 @@ The complete, non-negotiable CMS conventions live in **`claude.md`** at the repo
 - **Anchor links** — use the `/#section` format (leading slash + hash).
 - **SEO** — every `+page.svelte` keeps a `<svelte:head>` with `<title>` + `<meta name="description">` (the CMS SEO editor reads/writes these).
 - **Forms** — never hand-build a form backend, submission URL, or CAPTCHA sitekey. Client forms are registered in the CMS and wired via its "Connect form to site" action, which gives you the exact endpoint (`https://api.corelabs.digital/api/forms/<slug>/submit`) and hCaptcha widget — use those verbatim; never a relative/placeholder `action` or a per-site key. No endpoint given → render a plain contact section (not a posting `<form>`). Full rules in `claude.md` ("Forms").
+- **Mailing list** — signups POST to `https://api.corelabs.digital/api/mailing-lists/<app-id>/submit` (exact keys `email` / `name` / `phone_number`, hidden `website` honeypot, no hCaptcha, `fetch()`-based submit). Never store emails locally. The app id comes verbatim from the task — never guessed. Full rules in `claude.md` ("Mailing List Signup").
+- **Blog** — posts live in the Core Labs CMS; render them from the public blog API (`https://api.corelabs.digital/blog-posts/<app-id>`, app id supplied by the task). Blog routes fetch in a universal `+page.js` load and set `export const prerender = false` (posts publish without a redeploy). Never hardcode posts or build a local content system; API-rendered content gets no section markers. Full rules in `claude.md` ("Blog").
 - **Svelte 5 runes only** (`$state`, `$derived`, `$props`, `$effect`) — no Svelte 4 (`export let`, `$:`, stores). **Plain JavaScript, no TypeScript** — use JSDoc if you need types.
 
 ## Working in this repo
