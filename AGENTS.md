@@ -44,10 +44,62 @@ Client forms (contact, quote request, etc.) are **registered in the Core Labs CM
 
 - **Never invent a form backend or submission URL.** The endpoint is always the CMS forms API: `https://api.corelabs.digital/api/forms/<form-slug>/submit`, where `<form-slug>` is supplied by the task. Never use a relative action, a placeholder like `__FORM_ACTION__`, or your own server route. Asked to add a form but no endpoint/slug provided? Do NOT guess — render a plain contact section (heading + copy + CTA) and say the form must be created in CMS Forms and connected via "Connect form to site."
 - **Submit via `fetch()`**, not a native navigation: `method="POST"`, prevent the default submit, show a sending state and inline errors. **On success** (200 with `submission_id`), redirect the browser to the Core Labs confirmation page: `window.location.assign('https://www.corelabs.digital/f/<form-slug>/success?sid=<submission_id>')` — same `<form-slug>` as the submit URL, verbatim. Never build a local thank-you page and never settle for an inline success message; errors stay inline (never redirect on failure). Because the POST goes to an external endpoint via `fetch`, the page does **not** need `export const prerender = false`.
-- **hCaptcha** (when the task says the form requires it):
-  - Load the script once in `<svelte:head>`: `<script src="https://js.hcaptcha.com/1/api.js" async defer></script>`.
-  - Render the widget inside the form, before the submit button: `<div class="h-captcha" data-sitekey="9f64291e-4d3a-4ae8-b4ee-5692268481b2"></div>`. This is Core Labs' **shared public** hCaptcha sitekey — use it verbatim; never substitute a placeholder or a per-site key (a wrong key shows "The sitekey for this hCaptcha is incorrect").
-  - On submit, read the token from `[name="h-captcha-response"]` and include it in the POST body as `h-captcha-response`. If it's empty, block submission, ask the user to complete the CAPTCHA, and call `hcaptcha.reset()`.
+- **hCaptcha** (when the task says the form requires it) — **lazy explicit render, never eager**:
+  - **Never load `api.js` in `<svelte:head>` or at page load**, and never use implicit auto-render (`<div class="h-captcha">` + bare `api.js`). Eager loading pulls in hundreds of KB of third-party JS on the audited page (a major Lighthouse Performance penalty), and auto-render races SvelteKit hydration — the widget intermittently fails to appear until a refresh and breaks on client-side navigation.
+  - The sitekey `9f64291e-4d3a-4ae8-b4ee-5692268481b2` is Core Labs' **shared public** hCaptcha sitekey — use it verbatim; never substitute a placeholder or a per-site key (a wrong key shows "The sitekey for this hCaptcha is incorrect").
+  - Render an **empty container** inside the form before the submit button, with its height reserved so the widget can't shift layout, and inject the script the first time the form **nears the viewport** (`IntersectionObserver`, `rootMargin: '300px'`) **or receives focus** — whichever happens first — in explicit-render mode with an `onload` callback (no polling loops). Reference implementation:
+
+    ```svelte
+    <script>
+      import { onMount } from 'svelte'
+
+      const HCAPTCHA_SITEKEY = '9f64291e-4d3a-4ae8-b4ee-5692268481b2'
+      let formEl
+      let captchaEl
+      let widgetId = null
+
+      // Idempotent: safe to call repeatedly, and across multiple forms on one page.
+      function loadHcaptcha() {
+        if (!window._hcaptchaLoader) {
+          window._hcaptchaLoader = new Promise((resolve) => {
+            window._hcaptchaOnLoad = () => resolve(window.hcaptcha)
+            const s = document.createElement('script')
+            s.src = 'https://js.hcaptcha.com/1/api.js?render=explicit&onload=_hcaptchaOnLoad'
+            s.async = true
+            document.head.append(s)
+          })
+        }
+        window._hcaptchaLoader.then((hcaptcha) => {
+          if (widgetId === null && captchaEl) {
+            widgetId = hcaptcha.render(captchaEl, { sitekey: HCAPTCHA_SITEKEY })
+          }
+        })
+      }
+
+      onMount(() => {
+        const io = new IntersectionObserver(
+          (entries) => {
+            if (entries.some((e) => e.isIntersecting)) {
+              io.disconnect()
+              loadHcaptcha()
+            }
+          },
+          { rootMargin: '300px' }
+        )
+        io.observe(formEl)
+        formEl.addEventListener('focusin', loadHcaptcha, { once: true })
+        return () => io.disconnect()
+      })
+    </script>
+
+    <form bind:this={formEl} onsubmit={handleSubmit}>
+      <!-- fields … -->
+      <div bind:this={captchaEl} class="mb-4 min-h-[78px]"></div>
+      <!-- status area + submit button -->
+    </form>
+    ```
+
+  - On submit: `const token = widgetId === null ? '' : window.hcaptcha.getResponse(widgetId)`. If it's empty, block submission and show "Please complete the CAPTCHA." inline; otherwise include it in the POST body as `h-captcha-response`. Tokens are single-use — after a failed submission response, call `window.hcaptcha.reset(widgetId)` so the visitor can retry.
 - **Honeypot**: include the hidden spam field named in the task (default `website`), hidden with Tailwind utilities (not inline styles) and left empty: `<input type="text" name="website" class="absolute left-[-10000px] top-auto h-px w-px overflow-hidden" tabindex="-1" autocomplete="off" />`.
 - **Field names**: use the exact posted keys from the task (typically semantic names like `name`, `email`, `phone`, `message`, `company`). Every input has an associated `<label>`.
 
@@ -90,7 +142,7 @@ Core Labs sites must score in the high 90s–100 on Google Lighthouse (Performan
 - **Fonts**: the default is the system font stack — it costs zero bytes and is perfectly acceptable. When the brand calls for custom type, **self-host** it: `npm install @fontsource-variable/<font>` and import it once at the top of `src/app.css` (e.g. `@import '@fontsource-variable/inter';`), then reference the family in `tailwind.config.js` `theme.extend.fontFamily`. **NEVER add a `<link>` to `fonts.googleapis.com`, `use.typekit.net`, or any third-party font CSS** — render-blocking cross-origin CSS is one of the biggest Lighthouse penalties. Maximum 2 font families per site; prefer variable fonts.
 - **No preloaders or splash screens.** These pages are prerendered static HTML that paints almost instantly; a loading overlay only *delays* first paint and tanks FCP/LCP. If a task asks for a "preloader", deliver polished entrance styling instead and note why.
 - **Animations must not hide the LCP element.** The hero headline and hero image render visible immediately — never start them at `opacity-0` waiting for JS. Scroll-triggered reveals are for below-the-fold sections only, driven by `IntersectionObserver` (never scroll listeners), animating only `transform`/`opacity`. Count-up stat numbers: add Tailwind `tabular-nums` and render the final value in markup (animate after hydration) so there's no layout shift and no empty content for crawlers.
-- **Third-party scripts & embeds**: add NO analytics, chat widgets, or tracking pixels unless the task explicitly asks; each one costs Lighthouse points. Required scripts (e.g. hCaptcha) load `async defer`. Video embeds: `<iframe loading="lazy">` inside an `aspect-video` container, or better, a thumbnail facade that injects the iframe on click.
+- **Third-party scripts & embeds**: add NO analytics, chat widgets, or tracking pixels unless the task explicitly asks; each one costs Lighthouse points. hCaptcha loads **lazily** per the Forms rules — never in `<svelte:head>`; any other genuinely required script loads `async defer` and as late as its function allows. Video embeds: `<iframe loading="lazy">` inside an `aspect-video` container, or better, a thumbnail facade that injects the iframe on click.
 - No large client-side JS libraries; Svelte ships almost none by default — keep it that way.
 - If the site loads images/fonts from another origin, add a `<link rel="preconnect" href="…">` for it in the page `<svelte:head>`.
 
