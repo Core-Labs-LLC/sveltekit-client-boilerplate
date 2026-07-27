@@ -160,6 +160,7 @@ Core Labs sites must score in the high 90s–100 on Google Lighthouse (Performan
 ### SEO
 
 - Every `+page.svelte` `<svelte:head>` has a **unique** `<title>` + `<meta name="description">`, a `<link rel="canonical">`, Open Graph (`og:*`) + Twitter tags, and JSON-LD structured data (`Organization`, or `LocalBusiness` with address/phone/hours for local clients).
+- **CMS round-trip (do not break)**: the Core Labs CMS reads a page's current SEO values from the rendered head of the live page and applies edits back to that page's `<svelte:head>`. So every page's `<title>`, `<meta name="description">`, and OG/Twitter tags must be **server-rendered from that page's own `<svelte:head>`** — plain literal strings or values resolved during SSR. Never inject them client-side (`onMount`/DOM scripting) and never define a page's title/description only in a layout. Treat `title`/`og:title`/`twitter:title` and `description`/`og:description`/`twitter:description` as one unit: when one changes, keep its counterparts in sync.
 - Keep `static/robots.txt` and the `sitemap.xml` route valid; add new routes to the sitemap's `routes` list.
 - Descriptive link text (not "click here"); external links use `rel="noopener"` (add `noreferrer` for untrusted).
 
