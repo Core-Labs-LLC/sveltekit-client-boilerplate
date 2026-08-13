@@ -3,7 +3,9 @@ import { join } from 'node:path'
 import { sveltekit } from '@sveltejs/kit/vite'
 import { defineConfig } from 'vite'
 
-const PLACEHOLDER = 'example.com'
+// URL form only (https://example.com, ://www.example.com) — form-input hints
+// like placeholder="you@example.com" are legitimate UI text, not SEO drift.
+const PLACEHOLDER = /:\/\/(www\.)?example\.com/
 const SCAN_DIRS = ['src', 'static']
 const SCAN_EXTENSIONS = ['.svelte', '.js', '.txt', '.xml', '.html']
 
@@ -14,7 +16,7 @@ function scanForPlaceholder(dir) {
     const path = join(dir, entry.name)
     if (entry.isDirectory()) hits.push(...scanForPlaceholder(path))
     else if (SCAN_EXTENSIONS.some((ext) => entry.name.endsWith(ext))) {
-      if (readFileSync(path, 'utf-8').includes(PLACEHOLDER)) hits.push(path)
+      if (PLACEHOLDER.test(readFileSync(path, 'utf-8'))) hits.push(path)
     }
   }
   return hits
@@ -36,7 +38,7 @@ function placeholderSeoGuard() {
       if (hits.length === 0) return
       const productionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL || ''
       const launched = productionUrl && !productionUrl.endsWith('.vercel.app')
-      const message = `'${PLACEHOLDER}' placeholder still present in: ${hits.join(', ')} — replace with the site's real domain`
+      const message = `'example.com' placeholder URL still present in: ${hits.join(', ')} — replace with the site's real domain`
       if (launched) throw new Error(`${message} (custom domain ${productionUrl} is attached)`)
       this.warn(message)
     },
