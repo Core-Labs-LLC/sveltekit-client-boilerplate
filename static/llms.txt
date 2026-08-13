@@ -1,0 +1,14 @@
+# Your Brand
+
+> A short, factual summary of the business for AI assistants: what it does, who it serves, and where it operates. Replace during build-out (see AGENTS.md), and keep it consistent with the homepage description.
+
+## Pages
+
+- [Home](https://example.com/): What the business does and its main offer
+- [Contact](https://example.com/contact): How to get in touch
+
+## Facts
+
+- Business name: Your Brand
+- Service area: City, State
+- Contact: hello@example.com

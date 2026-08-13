@@ -5,6 +5,9 @@
   const siteUrl = 'https://example.com'
   const title = `${siteName} — Tagline goes here`
   const description = 'A short, compelling description of the business for search results and social shares.'
+  // Social share image (1200×630) — the placeholder in /static must be
+  // replaced with a branded image during build-out. Absolute URL required.
+  const ogImage = `${siteUrl}/og-image.png`
 
   // Structured data: switch @type to "LocalBusiness" (with address/telephone/
   // openingHours) for local clients — it powers rich results in Google.
@@ -27,10 +30,14 @@
   <meta property="og:title" content={title} />
   <meta property="og:description" content={description} />
   <meta property="og:url" content={siteUrl} />
+  <meta property="og:image" content={ogImage} />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
 
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content={title} />
   <meta name="twitter:description" content={description} />
+  <meta name="twitter:image" content={ogImage} />
 
   {@html `<script type="application/ld+json">${JSON.stringify(jsonLd)}<\/script>`}
 </svelte:head>
