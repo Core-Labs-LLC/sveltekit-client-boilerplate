@@ -39,6 +39,30 @@ This file is the **single source of truth** for conventions in this repo (`CLAUD
 - **SEO head**: every `+page.svelte` keeps a `<svelte:head>` with a unique `<title>` + `<meta name="description">` (full SEO requirements in the Lighthouse section).
 - **Error page**: `src/routes/+error.svelte` is the branded 404/error page (`noindex`, links back home). Restyle it alongside the rest of the site during build-out — never delete it.
 
+## Visual design
+
+Correctness is not the same as looking good, and a client judges this site on how
+it looks. The full bar — composition, type scale, spacing rhythm, colour
+discipline, and the "templated look" tells to avoid — is the `web-design-bar`
+skill, which is preloaded on any run that changes what a visitor sees. Two rules
+live here because they are repo conventions:
+
+- **The site's design tokens are the source of truth.** Brand colours, fonts, and
+  any custom spacing belong in `theme.extend` in `tailwind.config.js`, referenced
+  by name (`bg-brand-primary`, `font-display`) everywhere else. Arbitrary values
+  (`bg-[#7433ff]`) are fine for a genuine one-off, but **anything used more than
+  once becomes a named token** — changing a brand colour must be a one-line edit
+  in the config, not a find-and-replace across a dozen pages. When building a
+  site out, define the tokens first and build on them.
+- **Reuse the scale that is already here.** Section padding, heading sizes,
+  border radii, and the neutral ramp are decisions this site has already made.
+  A page that invents its own is the main way these sites drift into looking
+  unfinished — match what the other pages do.
+
+**Look at what you built.** Any change a visitor can see gets screenshotted at
+390/768/1440 and reviewed before you declare it done; the run prompt gives you
+the screenshot tool's path. A page you have never seen is a guess.
+
 ## Forms
 
 Client forms (contact, quote request, etc.) are **registered in the Core Labs CMS** and wired into the site through the CMS "Connect form to site" action, which supplies the exact submission endpoint and fields — **use the values from the task instructions verbatim.**
