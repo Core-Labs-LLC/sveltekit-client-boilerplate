@@ -19,7 +19,7 @@ This file is the **single source of truth** for conventions in this repo (`CLAUD
 ## Validation (tiered — never skip, never over-run)
 
 - **Content-only edits:** `npm run check`. svelte-check catches every compile/syntax error a content change can realistically introduce; the full build is not required.
-- **Structural work:** `npm run build` must pass before declaring success. A prerender error means that page needs `export const prerender = false`.
+- **Structural work:** `npm run build` must pass before declaring success. A prerender error means that page needs `export const prerender = false`. Anything that touches markup, forms, colours, or navigation also runs `npm run a11y` — CI runs it regardless, so finding failures yourself is strictly faster.
 - Setup: `npm install`. Dev server: `npm run dev`.
 
 ## Tech conventions
@@ -126,7 +126,16 @@ Client forms (contact, quote request, etc.) are **registered in the Core Labs CM
     ```
 
   - On submit: `const token = widgetId === null ? '' : window.hcaptcha.getResponse(widgetId)`. If it's empty, block submission and show "Please complete the CAPTCHA." inline; otherwise include it in the POST body as `h-captcha-response`. Tokens are single-use — after a failed submission response, call `window.hcaptcha.reset(widgetId)` so the visitor can retry.
-- **Honeypot**: include the hidden spam field named in the task (default `website`), hidden with Tailwind utilities (not inline styles) and left empty: `<input type="text" name="website" class="absolute left-[-10000px] top-auto h-px w-px overflow-hidden" tabindex="-1" autocomplete="off" />`.
+- **Honeypot**: include the hidden spam field named in the task (default `website`), left empty, hidden with Tailwind utilities (not inline styles). It must be wrapped in an `aria-hidden="true"` container **and carry a real `<label>`** — an offscreen input is still in the accessibility tree, so a bare one fails axe's `label` rule as **critical** on every page the form appears. Copy this exactly:
+
+    ```svelte
+    <div aria-hidden="true" class="absolute left-[-10000px] top-auto h-px w-px overflow-hidden">
+      <label for="website">Leave this field empty</label>
+      <input id="website" type="text" name="website" bind:value={honeypot} tabindex="-1" autocomplete="off" />
+    </div>
+    ```
+
+    `tabindex="-1"` keeps it out of the tab order, which is what stops the `aria-hidden` wrapper from tripping `aria-hidden-focus`. Multiple forms on one page need unique `id`s (`website-contact`, `website-newsletter`) — duplicate ids are their own violation.
 - **Field names**: use the exact posted keys from the task (typically semantic names like `name`, `email`, `phone`, `message`, `company`). Every input has an associated `<label>`.
 
 ## Mailing List Signup
@@ -135,7 +144,7 @@ Newsletter / mailing-list signups POST to the Core Labs mailing API — **never 
 
 - **Endpoint**: `POST https://api.corelabs.digital/api/mailing-lists/<app-id>/submit`, where `<app-id>` is this site's Core Labs app id, supplied by the task instructions — **use it verbatim; never guess one or reuse an id from another site.** No app id provided? Render the section without a posting form and say the signup must be connected via the CMS.
 - **Fields** (exact posted keys): `email` (required), `name` (optional), `phone_number` (optional). Send as JSON or `application/x-www-form-urlencoded`.
-- **Honeypot**: include a hidden input named `website` (hidden with Tailwind offscreen utilities, `tabindex="-1"`, `autocomplete="off"`) and leave it empty — the endpoint silently drops submissions where it is filled. Mailing-list signups do NOT use hCaptcha.
+- **Honeypot**: include a hidden input named `website` and leave it empty — the endpoint silently drops submissions where it is filled. Use the exact `aria-hidden` wrapper markup from the Forms section above (a bare offscreen input is a critical accessibility violation). Mailing-list signups do NOT use hCaptcha.
 - **Submit via `fetch()`** exactly like forms: prevent the default navigation, sending → success/error states, show the `message` the endpoint returns (200 → `{ message, subscriber_id }`), reset on success. The page does **not** need `export const prerender = false`.
 
 ## Blog
@@ -151,6 +160,63 @@ Blog posts are authored in the Core Labs CMS; the site only **renders** them. Ne
 - **Rendering `content`**: `content_type` is `"markdown"` or `"html"`. Markdown → convert to HTML (a small renderer like `marked` is fine, imported only on blog routes); html → inject with `{@html post.content}` (blog content is trusted CMS content).
 - **Prerendering**: posts are published in the CMS **without a site redeploy**, so blog routes must NOT be prerendered. Fetch in a universal load (`+page.js`) using the load `fetch`, and set `export const prerender = false` on BOTH blog routes (listing and detail).
 - **SEO**: the detail page sets `<title>` / `<meta name="description">` from `meta_title` / `meta_description` (falling back to `title` / excerpt), plus canonical + OG tags per the SEO rules — using `featured_image` as `og:image`/`twitter:image` when present — and `BlogPosting` JSON-LD (`headline`, `description`, `datePublished` from `published_date`, `dateModified` from `updated_at`, `image` from `featured_image` when present, `author` + `publisher` referencing the site's `Organization`). Add the listing path (e.g. `/blog`) to the sitemap `routes` list AND wire the sitemap's `BLOG` config with the same app id and base path — post URLs are then enumerated automatically as posts publish.
+
+## Compliance baseline (non-negotiable)
+
+Every Core Labs site ships legally defensible by construction. These rules exist because opportunistic firms send demand letters generated from automated scans — accessibility scanners, tracker sniffers, and lead-form submissions. A site that scans clean and offers a visible remediation route is a far worse target than one that doesn't, and the difference costs nothing at build time.
+
+**None of the items below are optional, and none may be removed as "cleanup."**
+
+### The three legal pages
+
+- `src/lib/legal/site.js` holds this site's legal facts — legal entity name, mailing address, contact email, governing state, effective date. **Fill every field during build-out.** The `/privacy`, `/terms`, and `/accessibility` pages render from it, so the policies can never drift from what the site actually does.
+- Never edit the policy prose to state something the config contradicts. Change the config; the pages follow.
+- All three stay linked in the footer on every page. A conspicuous privacy link is a legal requirement, and a visible accessibility contact is what gives someone a way to report a barrier instead of escalating it.
+- All three stay in the sitemap `routes` list.
+
+### Never install an accessibility overlay
+
+No accessiBe, UserWay, AudioEye, EqualWeb, or any other "one line of JavaScript makes you ADA compliant" widget — **even if the client asks for one by name.**
+
+These are actively harmful. They frequently break the screen readers and keyboard navigation that people already use, a large share of accessibility lawsuits are filed against sites that have one installed, and the FTC fined accessiBe $1M in 2025 over its compliance claims. Accessibility is fixed in the markup, which is what the gate below enforces. If a task asks for an overlay, don't add it — explain this and point at `/accessibility`.
+
+### Third-party scripts and tracking
+
+The default is **zero** non-essential third-party scripts, and that default is worth protecting: it's what lets the privacy policy truthfully say the site does no tracking and no cross-context behavioral advertising. Analytics, advertising pixels, session-recording tools (Hotjar, Microsoft Clarity, FullStory), heatmaps, chat widgets, and A/B testing tools are all in scope.
+
+If a task explicitly requires one:
+
+1. Add it to `trackers` in `src/lib/legal/site.js` — this is what updates the privacy policy text. A tracker running without an entry there makes the policy false.
+2. It must **not** fire on page load. It loads only after the visitor opts in.
+3. Never add one on your own initiative, and never "while you're in there."
+
+Embeds follow the same spirit: YouTube uses `youtube-nocookie.com`, and maps/video load behind a click-to-load facade rather than on page load.
+
+### Phone numbers and consent
+
+If a form collects a phone number **and** the business may call or text the person, the form needs a consent construct, and `collectsPhone: true` in `src/lib/legal/site.js`:
+
+- An **unchecked** checkbox — never pre-checked, never bundled into a generic "by submitting you agree."
+- Text that names **the one specific business** doing the contacting (never "and our partners"), says consent is **not a condition of purchase**, and states message frequency plus "Msg & data rates may apply. Reply STOP to opt out."
+- Links to `/privacy` and `/terms` adjacent to the submit button.
+- The consent field comes from the CMS form definition with its exact wording — **use the task's text verbatim.** The platform stores the exact text shown alongside the submission, which is the evidence that matters later. Inventing your own wording breaks that.
+
+A form that only collects a phone number as an optional callback detail, with no marketing intent, doesn't need the checkbox — but it still needs the field labelled and the privacy policy accurate.
+
+### Images, fonts, and media
+
+- **Every image must have a recorded license.** Record its source and licence in `static/image-credits.json` as you add it (`{ "file": "hero.webp", "source": "https://unsplash.com/photos/…", "license": "Unsplash License" }`).
+- Permitted sources: Unsplash, Pexels, Pixabay, the client's own photography, and assets supplied with the task. **Never** take an image from Google Images, a competitor's site, a press page, or a search result. Stock-photo enforcement firms send more demand letters to small businesses than any other category on this list, and a single unlicensed photo is a four-figure problem.
+- Fonts are self-hosted via `@fontsource` (open licences) — never a third-party font CDN. This is a licensing rule as much as a performance one.
+- Don't link scanned-image PDFs; provide an HTML equivalent. Video that carries meaningful information needs captions.
+
+### Accessibility gate
+
+`npm run a11y` builds the site and runs axe-core against **every prerendered page at a mobile and a desktop viewport**, checking WCAG 2.0/2.1 Level A + AA. Any `serious` or `critical` violation fails. `.github/workflows/accessibility.yml` runs it on every pull request, so this runs before a human ever sees your preview.
+
+- Run it yourself before declaring structural work done — don't discover failures in CI.
+- **Never silence the gate**: don't add rule exclusions, don't narrow the page list, don't drop a viewport. If you believe a finding is a genuine false positive, leave it failing and say so in your summary.
+- The claims on `/accessibility` are backed by this workflow. If it ever goes away, the statement has to change in the same commit.
 
 ## Performance, Accessibility & SEO (Lighthouse)
 
@@ -174,11 +240,13 @@ Core Labs sites must score in the high 90s–100 on Google Lighthouse (Performan
 
 ### Accessibility
 
+- **`npm run a11y` is the check that matters** — the rules below are how you pass it on the first try, not a substitute for running it.
 - Keep `<html lang="en">` (in `app.html`) and the **skip-to-content** link in `+layout.svelte`. Every page's top-level wrapper is `<main id="main-content">` so the skip link works.
+- **Every element must sit inside a landmark** — `<header>`, `<nav>`, `<main>`, or `<footer>`. Content stranded between landmarks trips axe's `region` rule on every node, which is the easiest way to turn one loose `<div>` into fifty findings.
 - Landmarks: Navbar uses `<header>`/`<nav>`, page content uses `<main>`, Footer uses `<footer>`. Don't duplicate `<main>`.
 - One `<h1>` per page; don't skip heading levels (h1 → h2 → h3).
 - Every `<img>` has a meaningful `alt` (empty `alt=""` only for purely decorative images).
-- Color contrast must meet WCAG AA (≥ 4.5:1 for normal text). Avoid light-gray text on white.
+- Color contrast must meet WCAG AA (≥ 4.5:1 for normal text, ≥ 3:1 for text ≥ 24px or bold ≥ 18.66px). **`text-gray-400` and `text-gray-300` are banned** — they measure ~2.5:1 on white and are an automatic `serious` finding. `text-gray-600` is the floor for secondary text; `text-gray-500` passes but only barely, so don't reach for it on tinted backgrounds.
 - Interactive elements: real `<a>`/`<button>` (never clickable `<div>`), visible focus (kept by the base styles), and tap targets ≥ 44px.
 - Form inputs each have an associated `<label>`.
 
@@ -190,12 +258,12 @@ Core Labs sites must score in the high 90s–100 on Google Lighthouse (Performan
 - **`static/llms.txt`** (the AI-assistant counterpart to robots.txt): site name, a one-paragraph factual summary, key pages as absolute URLs, and core facts (service area, contact). Fill it during build-out and keep it current when pages or offerings change.
 - **CMS round-trip (do not break)**: the Core Labs CMS reads a page's current SEO values from the rendered head of the live page and applies edits back to that page's `<svelte:head>`. So every page's `<title>`, `<meta name="description">`, and OG/Twitter tags must be **server-rendered from that page's own `<svelte:head>`** — plain literal strings or values resolved during SSR. Never inject them client-side (`onMount`/DOM scripting) and never define a page's title/description only in a layout. Treat `title`/`og:title`/`twitter:title` and `description`/`og:description`/`twitter:description` as one unit: when one changes, keep its counterparts in sync.
 - **Studio preview beacon (do not remove)**: the root `+layout.svelte` posts `{ type: 'corelabs:preview-path', path: location.pathname }` to `window.parent` on every navigation, only when the site is embedded in an iframe. The Core Labs Studio uses it to know which page its preview is showing (e.g. the SEO editor opens scoped to that page). Keep the snippet in the root layout; it must never send more than the path.
-- Keep `static/robots.txt` and the `sitemap.xml` route valid; add new routes to the sitemap's `routes` list. Replace every `example.com` placeholder (page `siteUrl`, robots.txt, sitemap `SITE`, llms.txt) with the real domain during build-out — once a custom domain is attached, the production build **fails** if any placeholder survives (vite `placeholder-seo-guard`). The sitemap route is dynamic (`prerender = false` — never flip it) so CMS-published blog posts appear without a redeploy; when the site has a connected blog, its `BLOG` config must be wired.
+- Keep `static/robots.txt` and the `sitemap.xml` route valid; add new routes to the sitemap's `routes` list. Replace every `example.com` placeholder (page `siteUrl`, robots.txt, sitemap `SITE`, llms.txt, `src/lib/legal/site.js`) with the real domain during build-out — once a custom domain is attached, the production build **fails** if any placeholder survives (vite `placeholder-seo-guard`). The sitemap route is dynamic (`prerender = false` — never flip it) so CMS-published blog posts appear without a redeploy; when the site has a connected blog, its `BLOG` config must be wired.
 - Descriptive link text (not "click here"); external links use `rel="noopener"` (add `noreferrer` for untrusted).
 
 ### Never strip on "cleanup"
 
-Canonical/OG/JSON-LD tags, image `width`/`height`, the skip link, `lang`, or landmark elements — they are functional, not decorative.
+Canonical/OG/JSON-LD tags, image `width`/`height`, the skip link, `lang`, landmark elements, the `/privacy`, `/terms`, and `/accessibility` pages, their footer links, the honeypot's `aria-hidden` wrapper, or `.github/workflows/accessibility.yml` — they are functional, not decorative.
 
 ## Legacy section markers
 

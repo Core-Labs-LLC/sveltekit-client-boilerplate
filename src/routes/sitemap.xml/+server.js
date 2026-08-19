@@ -5,11 +5,13 @@
 export const prerender = false
 
 const SITE = 'https://example.com'
-const routes = ['/']
+// Legal pages ship on every Core Labs site — keep them listed.
+const routes = ['/', '/privacy', '/terms', '/accessibility']
 
 // Wire this when the site has a connected blog, using the same app id the
 // blog pages fetch with (supplied by the task instructions — never guessed):
 // const BLOG = { appId: '<app-id>', basePath: '/blog' }
+/** @type {{ appId: string, basePath: string } | null} */
 const BLOG = null
 
 /** @param {typeof fetch} fetchFn */

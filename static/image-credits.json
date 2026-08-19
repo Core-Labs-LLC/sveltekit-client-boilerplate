@@ -1,0 +1,10 @@
+{
+  "$comment": "License provenance for every image in /static. Add an entry as you add an image — stock-photo enforcement firms send more demand letters to small businesses than any other category, and this file is the record that answers one. Permitted sources: Unsplash, Pexels, Pixabay, the client's own photography, and assets supplied with the task. Never Google Images, a competitor's site, or a press page.",
+  "images": [
+    {
+      "file": "og-image.png",
+      "source": "Core Labs template placeholder",
+      "license": "Replace during build-out with the branded social share image"
+    }
+  ]
+}

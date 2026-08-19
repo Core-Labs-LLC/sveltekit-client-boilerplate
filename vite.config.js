@@ -29,10 +29,11 @@ function scanForPlaceholder(dir) {
  * only once a custom production domain is attached, which is the moment
  * placeholder SEO would leak onto the live site.
  */
+/** @returns {import('vite').Plugin} */
 function placeholderSeoGuard() {
   return {
     name: 'placeholder-seo-guard',
-    apply: 'build',
+    apply: /** @type {const} */ ('build'),
     buildStart() {
       const hits = SCAN_DIRS.flatMap((dir) => scanForPlaceholder(dir))
       if (hits.length === 0) return
