@@ -1,0 +1,22 @@
+# Section components must use semantic tokens, never raw colours — the rule that
+# keeps one shared catalogue from producing fourteen identical client sites.
+#
+# Gates the PR rather than the build: a colour rule must never be able to break
+# a live client site's production deploy.
+name: Design tokens
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      # No install step — the check is dependency-free on purpose.
+      - run: node scripts/check-design-tokens.mjs

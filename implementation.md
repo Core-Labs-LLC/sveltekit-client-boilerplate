@@ -174,6 +174,20 @@ This split exists so that well-made sections can be lifted into a shared catalog
 - Use Tailwind CSS for ALL styling — NO inline styles, NO `<style>` blocks, NO custom CSS
 - The boilerplate has Tailwind configured with `@tailwindcss/typography` and a custom `xs: 375px` breakpoint
 
+**Fill in the brand tokens first.** `src/app.css` has a `:root` block — `--brand`,
+`--brand-ink`, `--accent`, `--surface`, `--surface-alt`, `--ink`, `--ink-muted`,
+`--line`, `--radius`, `--font-display`, `--font-body`. Set them from the client's
+brand colours before writing any markup. Colours are space-separated RGB channels
+(`--brand: 30 58 138;`), not hex, which is what makes `bg-brand/10` work.
+
+Then style by ROLE, not by colour: `bg-brand`, `text-ink`, `text-ink-muted`,
+`border-line`, `bg-surface`, `rounded-token`, `font-display`. **Section components
+must never contain a raw colour** — no `bg-blue-600`, no `text-gray-900`, no
+`text-[#192b28]`. `npm run check:tokens` enforces this and CI fails on it.
+
+Leaving the tokens at their defaults is how every client site ends up looking
+identical. They are a starting point, not a palette.
+
 ### Navigation & Links
 
 - All anchor links MUST use the `/#section` format (e.g. `href="/#services"`, `href="/#contact"`)
@@ -200,7 +214,7 @@ These sites are sold on near-perfect Lighthouse scores. The boilerplate already 
 - Fonts: system stack, or self-hosted via `@fontsource-variable/<font>` imported in `src/app.css` and wired into `tailwind.config.js` — NEVER a `<link>` to fonts.googleapis.com or other third-party font CSS; max 2 families
 - No third-party scripts (analytics, chat widgets, pixels) unless explicitly requested
 - Every page keeps a unique `<title>`, `<meta name="description">`, `<link rel="canonical">`, OG/Twitter tags, and JSON-LD structured data (`LocalBusiness` for local clients) — see the boilerplate's `+page.svelte` for the pattern
-- Run `npm run build` before declaring success
+- Run `npm run build` and `npm run check:tokens` before declaring success
 
 ### Forms
 

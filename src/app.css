@@ -2,6 +2,50 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   BRAND TOKENS — this block is where a site gets its look.
+   Fill these in during build-out from the client's brand. Everything else in
+   the site refers to them by NAME, so changing a value here changes the whole
+   site and nothing has to be hunted down.
+
+   Colours are space-separated RGB channels, not hex — that is what lets
+   Tailwind's opacity modifiers work (`bg-brand/10`).
+
+   Leaving these at the defaults is how every client site ends up looking
+   identical. They are a starting point, not a palette.
+   ───────────────────────────────────────────────────────────────────────── */
+@layer base {
+  :root {
+    /* Primary brand colour, and the text that sits on top of it. */
+    --brand: 17 24 39;
+    --brand-ink: 255 255 255;
+
+    /* Optional second brand colour: highlights, accents, hover states. */
+    --accent: 55 65 81;
+
+    /* Page ground, and the alternating ground that separates sections. */
+    --surface: 255 255 255;
+    --surface-alt: 249 250 251;
+
+    /* Body text, and secondary/supporting text. */
+    --ink: 17 24 39;
+    --ink-muted: 75 85 99;
+
+    /* Borders, rules, dividers. */
+    --line: 229 231 235;
+
+    /* Corner treatment. Changes how a site FEELS more than people expect:
+       0 reads architectural, 0.5rem neutral, 1rem+ friendly/consumer. */
+    --radius: 0.5rem;
+
+    /* Type. Two families at most (see the Performance rules in AGENTS.md).
+       Self-host with @fontsource-variable and set the family name here —
+       never a <link> to a third-party font CSS. */
+    --font-display: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    --font-body: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+}
+
 /* Accessibility & performance base (keeps Lighthouse a11y/perf high). */
 @layer base {
   html {
