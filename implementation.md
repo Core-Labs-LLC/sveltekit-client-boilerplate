@@ -103,12 +103,20 @@ ___
 
 ### Files to Generate
 
-Generate exactly **4 files**, overwriting the existing stubs:
+Overwrite these 4 stubs:
 
 1. **`src/lib/components/Navbar.svelte`** — Site navigation bar
 2. **`src/lib/components/Footer.svelte`** — Site footer
 3. **`src/routes/+layout.svelte`** — App shell that imports shared components
-4. **`src/routes/+page.svelte`** — Homepage with all page sections
+4. **`src/routes/+page.svelte`** — Homepage, which **composes** the section components below
+
+Plus **one file per page section** in `src/lib/components/sections/`:
+
+- One component per section — `Hero.svelte`, `Services.svelte`, `Testimonials.svelte`, `Faq.svelte`, `Cta.svelte`, and so on. Name it for what the section IS, not where it sits.
+- **Content comes in as props; the component owns only presentation and layout.** A section that hardcodes this client's copy cannot be reused on the next site, and reuse is the point.
+- `+page.svelte` holds the content — the data arrays and the strings — and passes them down. It stays the one predictable place to change wording.
+
+This split exists so that well-made sections can be lifted into a shared catalogue later, and so that editing one section doesn't mean loading the whole homepage. A single monolithic `+page.svelte` is not acceptable, however good it looks.
 
 ### Component Architecture
 
@@ -142,10 +150,16 @@ Generate exactly **4 files**, overwriting the existing stubs:
   <Footer />
   ```
 
+**`src/lib/components/sections/*.svelte`:**
+- One component per page section, presentation only
+- Takes its content via `let { … } = $props()` — no hardcoded client copy, no fetching, no side effects
+- Owns its own layout, spacing and responsive behaviour, and its own scroll-reveal wiring
+
 **+page.svelte:**
 - Do NOT include Navbar or Footer — they come from the layout
-- All section data (services array, testimonials array, etc.) goes in the `<script>` block
-- Use `{#each}` loops to render repeatable content from data arrays
+- Imports the section components and renders them in order — it is the composition, not the markup
+- All section data (services array, testimonials array, headline strings, etc.) goes in the `<script>` block and is passed to the sections as props
+- Use `{#each}` loops **inside the section components** to render repeatable content from the arrays they receive
 - MUST include a `<svelte:head>` block with an SEO-optimized `<title>` and `<meta name="description">`
 
 ### Svelte 5 Requirements
@@ -167,11 +181,11 @@ Generate exactly **4 files**, overwriting the existing stubs:
 
 ### Scroll Animations
 
-- Add scroll-triggered entrance animations to page sections using Svelte `$effect` and `IntersectionObserver`
-- In +page.svelte, create a reusable scroll animation pattern:
-  1. A function that observes elements and adds a class when they enter the viewport
+- Add scroll-triggered entrance animations to page sections using `IntersectionObserver`
+- Write the observer ONCE as a Svelte action in `src/lib/actions/scrollReveal.js` and use it from each section (`<div use:scrollReveal>`). Now that sections are separate components, an observer written per section is the same code copied ten times.
+  1. The action observes its element and adds a class when it enters the viewport
   2. Use Tailwind classes: `opacity-0 translate-y-8` → `opacity-100 translate-y-0` with `transition-all duration-700`
-  3. Stagger child elements within sections for a cascading reveal effect
+  3. Stagger child elements within a section for a cascading reveal effect
   4. Keep animations subtle and professional — no bouncing or spinning
 - **The hero section is exempt**: the hero headline and hero image must be visible in the initial HTML — never `opacity-0` waiting for JS. Hiding the LCP element behind an entrance animation destroys the Lighthouse performance score. Scroll reveals are for below-the-fold sections only.
 - No full-page preloaders or splash screens — the site is prerendered static HTML and must paint instantly.
@@ -188,23 +202,9 @@ These sites are sold on near-perfect Lighthouse scores. The boilerplate already 
 - Every page keeps a unique `<title>`, `<meta name="description">`, `<link rel="canonical">`, OG/Twitter tags, and JSON-LD structured data (`LocalBusiness` for local clients) — see the boilerplate's `+page.svelte` for the pattern
 - Run `npm run build` before declaring success
 
-### Section Markers (Required for CMS)
-
-Wrap each logical section of **+page.svelte only** with HTML comment markers for the visual block editor:
-
-```html
-<!-- section:TYPE {"type":"TYPE","id":"TYPE-UNIQUEID"} -->
-  ...content...
-<!-- /section:TYPE -->
-```
-
-Valid types: `hero`, `features`, `text`, `image`, `gallery`, `testimonials`, `cta`, `pricing`, `contact`, `faq`, `stats`, `services`, `team`
-
-Do NOT add section markers to Navbar.svelte or Footer.svelte. Every distinct section in +page.svelte MUST be wrapped with these markers.
-
 ### Forms
 
-Do NOT hand-build a form backend, submission URL, or CAPTCHA sitekey during initial generation. Client forms are registered in the Core Labs CMS (which mints the real submission endpoint) and then wired into the site through the CMS "Connect form to site" action — that flow supplies Sven the exact endpoint and hCaptcha widget to render. The full, authoritative form convention lives in `claude.md` ("Forms"); follow it there. If a page needs a placeholder contact section before a form is connected, use plain semantic markup (heading + copy + a CTA) — no `<form>` posting to an invented or placeholder URL.
+Do NOT hand-build a form backend, submission URL, or CAPTCHA sitekey during initial generation. Client forms are registered in the Core Labs CMS (which mints the real submission endpoint) and then wired into the site through the CMS "Connect form to site" action — that flow supplies Sven the exact endpoint and hCaptcha widget to render. The full, authoritative form convention lives in `AGENTS.md` ("Forms"); follow it there. If a page needs a placeholder contact section before a form is connected, use plain semantic markup (heading + copy + a CTA) — no `<form>` posting to an invented or placeholder URL.
 
 ### Design Excellence
 
@@ -222,4 +222,4 @@ This is the most important part. Think **Stripe, Linear, Vercel, Apple** level d
 
 ## Generate Now
 
-Create the 4 files listed above in this repository. Write each file completely — no partial code or placeholders. Every file should be production-ready. Do not add a posting `<form>`; forms are wired later through the CMS (see "Forms" above).
+Create the files listed above in this repository — the 4 stubs plus one component per page section. Write each file completely — no partial code or placeholders. Every file should be production-ready. Do not add a posting `<form>`; forms are wired later through the CMS (see "Forms" above).
