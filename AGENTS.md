@@ -20,14 +20,14 @@ This file is the **single source of truth** for conventions in this repo (`CLAUD
 
 - **Content-only edits:** `npm run check`. svelte-check catches every compile/syntax error a content change can realistically introduce; the full build is not required.
 - **Structural work:** `npm run build` must pass before declaring success. A prerender error means that page needs `export const prerender = false`.
-- **Anything touching `src/lib/components/sections/`:** also run `npm run check:tokens`. It is instant and dependency-free, and CI fails without it.
+- **Anything touching `src/lib/components/sections/`:** also run `npm run check:tokens` if that script exists in `package.json`. It is instant and dependency-free, and CI fails without it.
 - Setup: `npm install`. Dev server: `npm run dev`.
 
 ## Tech conventions
 
 - **Svelte 5 runes only** (`$state`, `$derived`, `$props`, `$effect`) — no Svelte 4 (`export let`, reactive `$:`, stores).
 - **Plain JavaScript, no TypeScript** — use JSDoc if you need type annotations.
-- **Tailwind utilities only** — no inline `style=""`, no `<style>` blocks, no preprocessors. The one place CSS variables live is the brand-token block in `src/app.css` (see Visual design); don't introduce others. Arbitrary values (`bg-[#7433ff]`) are acceptable for a genuine one-off in a page, but **never in `src/lib/components/sections/`** — those are token-only and CI rejects a raw colour there.
+- **Tailwind utilities only** — no inline `style=""`, no `<style>` blocks, no preprocessors. CSS variables belong in the token block in `src/app.css` and nowhere else. Arbitrary values (`bg-[#7433ff]`) are acceptable for a genuine one-off in a page, but **never in a component under `src/lib/components/sections/`** — if this site has that directory, those files are token-only and CI rejects a raw colour in them.
 - **Prerendering stays on** (`+layout.js`). A page that adds a server `load` or form `action` sets `export const prerender = false` on that page only.
 - Most edits are UI/content in `src/routes/**/+page.svelte` and `src/lib/components/`. Match the existing structure and style.
 
@@ -37,7 +37,7 @@ This file is the **single source of truth** for conventions in this repo (`CLAUD
 - **Repeatable content** (feature cards, testimonials, team members): declare an array in the page's `<script>` block and render with `{#each}`. These are small static sites — keep the data in the page; don't build data layers or content abstractions.
 - **Anchor links** use the `/#section` format (leading slash + hash), and the target section carries the matching `id` (e.g. `<section id="services">`).
 - **Navbar & Footer** are self-contained components in `src/lib/components/`, rendered **only** in `src/routes/+layout.svelte` — never in page files. **The footer keeps the Core Labs branding link** (`<a href="https://www.corelabs.digital/">Core Labs</a>`); never remove or modify it.
-- **Page sections are components** in `src/lib/components/sections/`, one per section, taking their content as props. `+page.svelte` holds the data and composes them — it is the composition, not the markup. Editing one section means opening one small file, not a 60KB page.
+- **Page sections:** newer sites keep each section as a component in `src/lib/components/sections/`, taking its content as props, with `+page.svelte` holding the data and composing them. Older sites have every section inline in `+page.svelte`. **Match what this site already does** — converting between the two is a task someone asks for, not something to do in passing.
 - **SEO head**: every `+page.svelte` keeps a `<svelte:head>` with a unique `<title>` + `<meta name="description">` (full SEO requirements in the Lighthouse section).
 - **Error page**: `src/routes/+error.svelte` is the branded 404/error page (`noindex`, links back home). Restyle it alongside the rest of the site during build-out — never delete it.
 
@@ -49,25 +49,27 @@ discipline, and the "templated look" tells to avoid — is the `web-design-bar`
 skill, which is preloaded on any run that changes what a visitor sees. Two rules
 live here because they are repo conventions:
 
-- **The site's design tokens are the source of truth.** The whole palette lives in
-  one `:root` block in `src/app.css` — `--brand`, `--brand-ink`, `--accent`,
-  `--surface`, `--surface-alt`, `--ink`, `--ink-muted`, `--line`, `--radius`,
-  `--font-display`, `--font-body` — and `tailwind.config.js` maps them to utility
-  names. Style by the ROLE a colour plays, never the colour itself:
-  `bg-brand`, `text-ink`, `text-ink-muted`, `border-line`, `bg-surface`,
-  `rounded-token`, `font-display`.
+- **The site's design tokens are the source of truth.** Style by the ROLE a colour
+  plays, never the colour itself. **Read what this site actually defines before
+  you write a class** — the fleet is not uniform. Sites built from the current
+  boilerplate use `--brand`, `--brand-ink`, `--accent`, `--surface`,
+  `--surface-alt`, `--ink`, `--ink-muted`, `--line`, `--radius`,
+  `--font-display`, `--font-body` in one `:root` block in `src/app.css`, exposed
+  as `bg-brand`, `text-ink`, `text-ink-muted`, `border-line`, `rounded-token`.
+  Older sites define their own names, in `src/app.css`, in `theme.extend` in
+  `tailwind.config.js`, or both. Use whichever this site has.
 
-  Changing a brand colour is a one-line edit in `app.css`, not a find-and-replace
-  across a dozen pages. Values are space-separated RGB channels
-  (`--brand: 30 58 138;`), not hex — that is what makes `bg-brand/10` work.
+  What holds everywhere: changing a brand colour must be a one-line edit in one
+  place, not a find-and-replace across a dozen pages. Anything used more than
+  once becomes a named token. **Never hardcode a raw colour** — not
+  `bg-blue-600`, not `text-gray-900`, not `text-[#192b28]`.
 
-  **Section components (`src/lib/components/sections/`) may not contain a raw
-  colour at all** — no `bg-blue-600`, no `text-gray-900`, no `text-[#192b28]`.
-  `npm run check:tokens` enforces it and CI fails on it. The rule exists because
-  those components get lifted into a shared catalogue across every client site:
-  a component that hardcodes one client's colours cannot serve another, and a
-  catalogue that carries design rather than structure makes every site look the
-  same.
+  Where this site has `src/lib/components/sections/`, those components are
+  token-only and `npm run check:tokens` enforces it — run it if the script exists
+  in `package.json`. The rule is strict there because those components get lifted
+  into a shared catalogue across client sites: one that hardcodes a client's
+  colours cannot serve another, and a catalogue carrying design rather than
+  structure makes every site look the same.
 - **Reuse the scale that is already here.** Section padding, heading sizes,
   border radii, and the neutral ramp are decisions this site has already made.
   A page that invents its own is the main way these sites drift into looking
@@ -79,7 +81,7 @@ the screenshot tool's path. A page you have never seen is a guess.
 
 ## The site's style guide (`/styleguide`)
 
-Most of these sites carry a `/styleguide` route. It is an internal REFERENCE, not
+Some of these sites carry a `/styleguide` route. It is an internal REFERENCE, not
 a page for visitors: it imports and renders this site's real components, type
 scale, palette, buttons and spacing on one page, so that a later run — quite
 possibly you — can see what this site already looks like before adding to it.
