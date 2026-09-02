@@ -20,6 +20,7 @@ This file is the **single source of truth** for conventions in this repo (`CLAUD
 
 - **Content-only edits:** `npm run check`. svelte-check catches every compile/syntax error a content change can realistically introduce; the full build is not required.
 - **Structural work:** `npm run build` must pass before declaring success. A prerender error means that page needs `export const prerender = false`.
+- **Anything that changes layout:** check it at 375px as well as desktop. A phone-width break is the most common defect these sites ship and the easiest to miss.
 - **Anything touching `src/lib/components/sections/`:** also run `npm run check:tokens` if that script exists in `package.json`. It is instant and dependency-free, and CI fails without it.
 - Setup: `npm install`. Dev server: `npm run dev`.
 
@@ -38,6 +39,17 @@ This file is the **single source of truth** for conventions in this repo (`CLAUD
 - **Anchor links** use the `/#section` format (leading slash + hash), and the target section carries the matching `id` (e.g. `<section id="services">`).
 - **Navbar & Footer** are self-contained components in `src/lib/components/`, rendered **only** in `src/routes/+layout.svelte` — never in page files. **The footer keeps the Core Labs branding link** (`<a href="https://www.corelabs.digital/">Core Labs</a>`); never remove or modify it.
 - **Page sections:** newer sites keep each section as a component in `src/lib/components/sections/`, taking its content as props, with `+page.svelte` holding the data and composing them. Older sites have every section inline in `+page.svelte`. **Match what this site already does** — converting between the two is a task someone asks for, not something to do in passing.
+- **Responsive is checked, not assumed.** Most visitors are on a phone, so a
+  layout that breaks at 375px is a visible failure however good it looks wide.
+  Build mobile-first (base classes are the phone layout; `sm:`/`md:`/`lg:` widen
+  it) and verify any layout change at **375, 768 and 1440**:
+  no horizontal scroll on `<body>`; no text or image overflowing its container
+  (long words and URLs need `break-words`); the nav collapses and its menu opens,
+  closes and scrolls; multi-column grids collapse to one column; tap targets at
+  least 44×44px; nothing depends on hover; tables and code blocks scroll inside
+  their own `overflow-x-auto` container rather than widening the page.
+  If a section cannot work at 375px, change the layout — `hidden sm:block` on
+  real content means most of the traffic never sees it.
 - **SEO head**: every `+page.svelte` keeps a `<svelte:head>` with a unique `<title>` + `<meta name="description">` (full SEO requirements in the Lighthouse section).
 - **Error page**: `src/routes/+error.svelte` is the branded 404/error page (`noindex`, links back home). Restyle it alongside the rest of the site during build-out — never delete it.
 

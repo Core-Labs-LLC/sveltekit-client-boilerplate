@@ -192,6 +192,37 @@ This split exists so that well-made sections can be lifted into a shared catalog
 - Use `let { children } = $props()` in +layout.svelte, NOT `<slot />`
 - Use plain JavaScript — NO TypeScript. Use `<script>` NOT `<script lang="ts">`
 
+### Responsive (verify, don't assume)
+
+Most visitors to these sites are on a phone. A layout that breaks at 375px is a
+visible failure however good it looks at 1440px, so this is checked, not hoped for.
+
+**Build mobile-first**: base classes are the phone layout, `sm:`/`md:`/`lg:`
+progressively widen it. Writing the desktop layout first and patching it down is
+how you end up with the failures below.
+
+**Verify at three widths before declaring success** — 375px (the boilerplate's
+`xs` breakpoint), 768px, and 1440px:
+
+- **No horizontal scroll on `<body>` at any width.** The single most common
+  failure. Usually a fixed width, a negative margin, an image without
+  `max-width`, or a grid that won't collapse.
+- **No text overflowing its container** — long words, URLs and headings included.
+  Long unbroken strings need `break-words`.
+- **Images stay inside their box** and keep their aspect ratio.
+- **The nav collapses** to the mobile menu and the menu opens, closes, and is
+  scrollable if it is taller than the screen.
+- **Multi-column grids collapse** to one column on a phone. Three cards side by
+  side at 375px is unreadable.
+- **Tap targets are at least 44×44px** with visible spacing between them.
+- **Nothing relies on hover** to be usable — a phone has no hover.
+- **Tables and code blocks scroll inside their own container**
+  (`overflow-x: auto`), never widen the page.
+
+If a section cannot be made to work at 375px, change the layout rather than
+hiding it — `hidden sm:block` on real content means the phone visitor, who is
+most of the traffic, simply never sees it.
+
 ### Styling Requirements
 
 - Use Tailwind CSS for ALL styling — NO inline styles, NO `<style>` blocks, NO custom CSS
@@ -237,7 +268,7 @@ These sites are sold on near-perfect Lighthouse scores. The boilerplate already 
 - Fonts: system stack, or self-hosted via `@fontsource-variable/<font>` imported in `src/app.css` and wired into `tailwind.config.js` — NEVER a `<link>` to fonts.googleapis.com or other third-party font CSS; max 2 families
 - No third-party scripts (analytics, chat widgets, pixels) unless explicitly requested
 - Every page keeps a unique `<title>`, `<meta name="description">`, `<link rel="canonical">`, OG/Twitter tags, and JSON-LD structured data (`LocalBusiness` for local clients) — see the boilerplate's `+page.svelte` for the pattern
-- Run `npm run build` and `npm run check:tokens` before declaring success
+- Run `npm run build` and `npm run check:tokens`, and verify the layout at 375/768/1440, before declaring success
 
 ### Forms
 
@@ -252,7 +283,7 @@ This is the most important part. Think **Stripe, Linear, Vercel, Apple** level d
 - **Color palette**: Cohesive and premium, derived from the brand colors — never generic or template-y
 - **Polish**: Refined shadows, subtle gradients, intentional borders and spacing
 - **Rhythm**: Consistent padding, alignment, and whitespace that feels considered
-- **Responsive**: Mobile-first with breakpoints that look great at every size
+- **Responsive**: mobile-first, and actually verified at 375/768/1440 — see the Responsive rules above for what to check
 - **Content**: Write rich, real-sounding copy — not lorem ipsum. Compelling headlines and descriptions tailored to the business
 
 ---
