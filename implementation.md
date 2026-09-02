@@ -53,7 +53,7 @@ Focus on:
 - Polished details: shadows, gradients, borders that feel intentional and high-end
 - Visual rhythm and alignment that feels considered
 - Use refined typography that aligns with the company's industry and brand identity (self-hosted via `@fontsource-variable` — see Performance rules; never a Google Fonts `<link>`)
-- Add a hero section background image that visually represents their core services or products — sourced from Unsplash if none is provided, downloaded and optimized into `/static` per the Performance rules (never hotlinked at full resolution)
+- Add a hero section background image that visually represents their core services or products. If the client supplied none, follow the sourcing rules in `AGENTS.md` ("Finding imagery when the client has supplied none") — **not** an arbitrary stock site. Download and optimize into `/static` per the Performance rules; never hotlink at full resolution. **A site with no photographs reads as a wireframe however good the type is** — if no image source is available, build properly sized image slots and say so in your summary rather than shipping a page with none.
 - Animate every stat/number on the page from 0, counting up when it scrolls into view (use `tabular-nums` and reserve the final width so digits don't shift the layout)
 - Add a CTA section before the contact details suited for a modern layout
 - Add a combined contact details + message form section before the footer
@@ -77,11 +77,34 @@ Include these sections in order:
 
 Primary CTAs: {{CTAS — e.g. "Get a Free Quote", "Schedule a Consultation", "Shop Now"}}
 
-### Reference Websites *(optional)*
+### Reference Websites
 
-<!-- Sites to draw design inspiration from. -->
+<!-- Two or three sites whose design hits the target. Fill this in — it is the highest-signal
+     field in this brief. A URL you can look at beats any amount of prose describing a feeling:
+     "warm and editorial" is unfalsifiable, three sites that nail it are executable. -->
 
 {{REFERENCE_SITES — e.g. "stripe.com, linear.app — clean layout with lots of whitespace"}}
+
+**Open these before designing anything.** Actually load each one and look at it — do not infer the
+design from the domain name. Note what specifically is worth taking (the type pairing, the spacing,
+the photographic treatment) and what is not. References are a target to hit, not a thing to copy.
+
+### Competitive Context *(recommended)*
+
+<!-- What do this client's competitors' sites look like, and where should we deliberately go
+     instead? This is what differentiates a client WITHIN their industry rather than just making
+     the site look like its category. It is the difference a client can actually feel. -->
+
+{{COMPETITORS — e.g. "Every other chimney sweep in Pittsburgh runs red-and-black with stock fire
+photography. Go warm neutral with real crew photography and generous whitespace."}}
+
+### Signature Move
+
+<!-- Name ONE memorable thing this site does. Generic sites have none, and a model with no
+     instruction here will average toward the mean. It must be specific enough to point at in
+     review — an unusual layout, a typographic choice, a photographic treatment. -->
+
+{{SIGNATURE — e.g. "Oversized tabular numerals in the stats band, set in the display face at 8rem"}}
 
 ### Copywriting
 
