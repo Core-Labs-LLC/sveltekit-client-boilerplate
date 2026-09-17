@@ -129,6 +129,7 @@ Client forms (contact, quote request, etc.) are **registered in the Core Labs CM
 - **hCaptcha** (when the task says the form requires it) — **lazy explicit render, never eager**:
   - **Never load `api.js` in `<svelte:head>` or at page load**, and never use implicit auto-render (`<div class="h-captcha">` + bare `api.js`). Eager loading pulls in hundreds of KB of third-party JS on the audited page (a major Lighthouse Performance penalty), and auto-render races SvelteKit hydration — the widget intermittently fails to appear until a refresh and breaks on client-side navigation.
   - The sitekey `9f64291e-4d3a-4ae8-b4ee-5692268481b2` is Core Labs' **shared public** hCaptcha sitekey — use it verbatim; never substitute a placeholder or a per-site key (a wrong key shows "The sitekey for this hCaptcha is incorrect").
+  - **Widget size: leave it at the default (`normal`, 303×78 px) — never pass `size: 'compact'` (the tall 164×144 px stack) or `size: 'invisible'`.** The normal widget fits every layout we ship, including a 375 px phone with 16 px gutters and a chat/popup panel. A container narrower than 303 px is a layout bug — widen the container, don't shrink the widget. Reserve `min-h-[78px]` on the container (the normal widget's height), never 144.
   - Render an **empty container** inside the form before the submit button, with its height reserved so the widget can't shift layout, and inject the script the first time the form **nears the viewport** (`IntersectionObserver`, `rootMargin: '300px'`) **or receives focus** — whichever happens first — in explicit-render mode with an `onload` callback (no polling loops). Reference implementation:
 
     ```svelte
@@ -153,6 +154,7 @@ Client forms (contact, quote request, etc.) are **registered in the Core Labs CM
         }
         window._hcaptchaLoader.then((hcaptcha) => {
           if (widgetId === null && captchaEl) {
+            // Default (normal) size on purpose — never add size: 'compact'
             widgetId = hcaptcha.render(captchaEl, { sitekey: HCAPTCHA_SITEKEY })
           }
         })
